@@ -36,7 +36,8 @@
  * A function/thread to handle printing the aproximations
  */
  void *printer() {
- 	printf("I'm a printer thread!\n");
+ 	
+
  	return 0;
  }
 
@@ -52,6 +53,7 @@
  	// The data points (x,y)
  	double x = 0;
  	double y = 0;
+ 	int isHit = 0;
  	
  	// rand() is not thread safe
  	pthread_mutex_lock(rand_lock);
@@ -66,22 +68,19 @@
  	// Use this test to see if we hit inside the circle
  	if (sqrt(x*x + y*y) <= 1) {
 
- 		// this is a hit
- 		pthread_mutex_lock(throws_lock);
-
-	 	throws++;
-	 	hits++;
-
-	 	pthread_mutex_unlock(throws_lock);
+		isHit = 1; 		
  	} else {
 
- 		// this is not a hit
- 		pthread_mutex_lock(throws_lock);
-
-	 	throws++;
-
-	 	pthread_mutex_unlock(throws_lock);
+ 		isHit = 0;
  	}
+
+ 	// this is a hit
+	pthread_mutex_lock(throws_lock);
+
+ 	throws++;
+ 	if (isHit) { hits++; }
+
+ 	pthread_mutex_unlock(throws_lock);
 
  	
  	
