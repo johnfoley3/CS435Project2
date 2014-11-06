@@ -7,10 +7,13 @@
  #include <pthread.h>
  #include <stdlib.h>
  #include <stdio.h>
+ #include <time.h>
 
  /* Constants! */
- int throws;
- int hits;
+ int throws = 0;
+ int hits = 0;
+ int done = 0;
+ int numIterations = 0;
 
  /* Locks! 
   * pthread_mutex_t * name_lock
@@ -31,7 +34,7 @@
  *
  * A function/thread to handle printing the aproximations
  */
- int printer() {
+ void *printer() {
  	printf("I'm a printer thread!");
  	return 0;
  }
@@ -43,7 +46,7 @@
  * is a hit inside the circle, and test to see if it was a multiple of 
  * million hit
  */
- int simulation() {
+ void *simulation() {
  	printf("I'm a simulation thread!");
  	return 0;
  }
@@ -55,8 +58,8 @@
  */
  int main(int argc, char *argv[]) {
 
- 	int done = 0;
- 	int numThreads = 0, numIterations = 0;
+ 	int numThreads = 0;
+ 	int i = 0;
 
 
  	if (argc != 3) {
@@ -72,6 +75,11 @@
  	sscanf(argv[1], "%d", &numThreads);
  	sscanf(argv[2], "%d", &numIterations);
 
+ 	 // Create our random number generator
+	 // Note: the seed is from the time library, rather than some
+	 // arbitrary number that I define.
+	 srand(time(NULL));
+
  	// Memory allocation for the locks
  	rand_lock = (pthread_mutex_t *) malloc (sizeof (pthread_mutex_t));
  	pthread_mutex_init (rand_lock, NULL);
@@ -82,6 +90,32 @@
  	// Memory allocation for the cond vars
  	can_print = (pthread_cond_t *) malloc (sizeof (pthread_cond_t));
  	pthread_cond_init (can_print, NULL);
+
+ 	// Create the printer thread
+ 	pthread_t * printer_thread = (pthread_t *) malloc (sizeof (pthread_t));
+
+ 	// Create all of the simluation threads
+ 	pthread_t ** simulation_threads = (pthread_t **) malloc ((sizeof (pthread_t)) * numThreads);
+
+ 	// Step through and initialize all the threads
+ 	for (i = 0; i < numThreads; i++) {
+
+ 		simulation_threads[i] = (pthread_t *) malloc (sizeof (pthread_t));
+
+ 		// start the threads
+ 		// args[1]: the pthread pointer
+ 		// args[2]: NULL
+ 		// args[3]: the function the thread will use
+ 		// args[4]: void pointer to argument (the random number generator)
+ 		if (pthread_create (simulation_threads[i],
+ 							NULL,
+ 							simulation,
+ 							NULL)) {
+ 			fprintf(stderr, "Error creating simulation thread %d\n", i);
+ 			exit(-1);
+ 		}
+
+ 	}
 
  	return 0;
 
