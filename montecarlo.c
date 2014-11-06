@@ -56,16 +56,34 @@
  	// rand() is not thread safe
  	pthread_mutex_lock(rand_lock);
 
+ 	// Divide by the max random number so that we get a number in range
+ 	// [0, 1.0]
  	x = (double)rand() / (double)RAND_MAX;
  	y = (double)rand() / (double)RAND_MAX;
 
  	pthread_mutex_unlock(rand_lock);
 
+ 	// Use this test to see if we hit inside the circle
  	if (sqrt(x*x + y*y) <= 1) {
- 		printf("x: %f, y: %f and it's a HIT!\n", x, y);
+
+ 		// this is a hit
+ 		pthread_mutex_lock(throws_lock);
+
+	 	throws++;
+	 	hits++;
+
+	 	pthread_mutex_unlock(throws_lock);
  	} else {
- 		printf("x: %f, y: %f\n and it's not a hit.. fuck\n", x, y);
+
+ 		// this is not a hit
+ 		pthread_mutex_lock(throws_lock);
+
+	 	throws++;
+
+	 	pthread_mutex_unlock(throws_lock);
  	}
+
+ 	
  	
  	return 0;
  }
