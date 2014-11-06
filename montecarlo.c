@@ -8,6 +8,7 @@
  #include <stdlib.h>
  #include <stdio.h>
  #include <time.h>
+ #include <math.h>
 
  /* Constants! */
  int throws = 0;
@@ -35,7 +36,7 @@
  * A function/thread to handle printing the aproximations
  */
  void *printer() {
- 	printf("I'm a printer thread!");
+ 	printf("I'm a printer thread!\n");
  	return 0;
  }
 
@@ -47,7 +48,25 @@
  * million hit
  */
  void *simulation() {
- 	printf("I'm a simulation thread!");
+
+ 	// The data points (x,y)
+ 	double x = 0;
+ 	double y = 0;
+ 	
+ 	// rand() is not thread safe
+ 	pthread_mutex_lock(rand_lock);
+
+ 	x = (double)rand() / (double)RAND_MAX;
+ 	y = (double)rand() / (double)RAND_MAX;
+
+ 	pthread_mutex_unlock(rand_lock);
+
+ 	if (sqrt(x*x + y*y) <= 1) {
+ 		printf("x: %f, y: %f and it's a HIT!\n", x, y);
+ 	} else {
+ 		printf("x: %f, y: %f\n and it's not a hit.. fuck\n", x, y);
+ 	}
+ 	
  	return 0;
  }
 
@@ -94,6 +113,14 @@
  	// Create the printer thread
  	pthread_t * printer_thread = (pthread_t *) malloc (sizeof (pthread_t));
 
+ 	if (pthread_create (printer_thread,
+ 							NULL,
+ 							printer,
+ 							NULL)) {
+ 			fprintf(stderr, "Error creating printer thread %d\n", i);
+ 			exit(-1);
+ 		}
+
  	// Create all of the simluation threads
  	pthread_t ** simulation_threads = (pthread_t **) malloc ((sizeof (pthread_t)) * numThreads);
 
@@ -114,9 +141,17 @@
  			fprintf(stderr, "Error creating simulation thread %d\n", i);
  			exit(-1);
  		}
-
  	}
 
- 	return 0;
+ 	// Clean up
+ 	for (i = 0; i < numThreads; i++) {
+
+ 		if (pthread_join (*simulation_threads[i], NULL)) {
+ 			fprintf (stderr, "Error joining simulation thread %d\n", i);
+ 			exit (-1);
+ 		}
+ 	}
+
+ 	exit(0);
 
  }
