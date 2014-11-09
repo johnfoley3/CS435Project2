@@ -15,6 +15,7 @@
  int hits = 0;
  int done = 0;
  int numIterations = 0;
+ int ok_to_print = 0;
 
  /* Locks! 
   * pthread_mutex_t * name_lock
@@ -22,6 +23,7 @@
   */
  pthread_mutex_t * rand_lock;
  pthread_mutex_t * throws_lock;
+ pthread_mutex_t * print_lock;
 
  /* Conditional Variables!
   * pthread_cond_t * cond_var
@@ -36,6 +38,34 @@
  * A function/thread to handle printing the aproximations
  */
  void *printer() {
+
+ 	float approx_pi = 0.0;
+
+ 	while (!done) {
+
+ 		pthread_mutex_lock(print_lock);
+
+ 		while (! ok_to_print) {
+
+ 			// wait until a simulation thread broadcasts that it's okay to print
+ 			pthread_cond_wait (can_print, print_lock);
+ 		}
+
+ 		ok_to_print = 0;
+
+ 		// lock the throws so that we accurately calculate the approximation
+ 		pthread_mutex_lock(throws_lock);
+
+ 		// calculate the approximation
+ 		approx_pi = (float)hits / (float)throws;
+
+ 		pthread_mutex_unlock(throws_lock);
+
+ 		// print the approximation
+ 		printf("This is the current approximation of pi: %f, at throw number: %d \n", 4.0 * approx_pi, throws);
+
+ 		pthread_mutex_unlock(print_lock);
+ 	}
  	
 
  	return 0;
@@ -50,7 +80,9 @@
  */
  void *simulation() {
 
- 	// The data points (x,y)
+ 	while (!done) {
+
+ 		// The data points (x,y)
  	double x = 0;
  	double y = 0;
  	int isHit = 0;
@@ -78,10 +110,23 @@
 	pthread_mutex_lock(throws_lock);
 
  	throws++;
+
  	if (isHit) { hits++; }
 
- 	pthread_mutex_unlock(throws_lock);
+ 	if( throws % 1000000 == 0) {
 
+ 		ok_to_print = 1;
+ 		pthread_cond_broadcast(can_print);
+ 	}
+
+ 	if(throws == numIterations) {
+
+ 		done = 1;
+ 	}
+
+ 	pthread_mutex_unlock(throws_lock);
+ 	}
+ 	
  	
  	
  	return 0;
@@ -122,6 +167,9 @@
 
  	throws_lock = (pthread_mutex_t *) malloc (sizeof (pthread_mutex_t));
  	pthread_mutex_init (throws_lock, NULL);
+
+ 	print_lock = (pthread_mutex_t *) malloc (sizeof (pthread_mutex_t));
+ 	pthread_mutex_init (print_lock, NULL);
 
  	// Memory allocation for the cond vars
  	can_print = (pthread_cond_t *) malloc (sizeof (pthread_cond_t));
