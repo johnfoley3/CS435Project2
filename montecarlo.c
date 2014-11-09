@@ -65,13 +65,14 @@
 
  		pthread_mutex_unlock(throws_lock);
 
- 		/* print the approximation */
- 		printf("This is the current approximation of pi: %f, at throw number: %d \n", 4.0 * approx_pi, throws);
+ 		/* print the approximation
+ 		Note: must multiply by 4, the current approx is pi/4 */
+ 		printf("This is the current approximation of pi: %f. \n", 4.0 * approx_pi);
 
  		pthread_mutex_unlock(print_lock);
  	}
 
- 	return 0;
+ 	pthread_exit(NULL);
  }
 
 /*
@@ -134,7 +135,7 @@
 	 	pthread_mutex_unlock(throws_lock);
  	}
  	
- 	return 0;
+ 	pthread_exit(NULL);
  }
 
  /* Time to get down to business. We need to grab exactly two arguments
