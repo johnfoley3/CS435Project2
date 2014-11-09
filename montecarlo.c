@@ -149,6 +149,10 @@
  	int numThreads = 0;
  	int i = 0;
 
+ 	/* Thread declarations (to satisfy pedantic warnings) */
+ 	pthread_t ** simulation_threads;
+ 	pthread_t * printer_thread;
+
  	/* Error checking; not essential, but could be useful */
  	if (argc > 3) {
 
@@ -195,7 +199,7 @@
  	pthread_cond_init (can_print, NULL);
 
  	/* Create the printer thread */
- 	pthread_t * printer_thread = (pthread_t *) malloc (sizeof (pthread_t));
+ 	printer_thread = (pthread_t *) malloc (sizeof (pthread_t));
 
  	if (pthread_create (printer_thread,
  							NULL,
@@ -206,7 +210,7 @@
  		}
 
  	/* Create all of the simluation threads */
- 	pthread_t ** simulation_threads = (pthread_t **) malloc ((sizeof (pthread_t)) * numThreads);
+ 	simulation_threads = (pthread_t **) malloc ((sizeof (pthread_t)) * numThreads);
 
  	/* Step through and initialize all the threads */
  	for (i = 0; i < numThreads; i++) {
