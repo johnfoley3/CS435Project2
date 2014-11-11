@@ -10,7 +10,6 @@
  #include <stdlib.h>
  #include <stdio.h>
  #include <time.h>
- #include <math.h>
 
  #define _THRESHOLD 1000000
 
@@ -103,7 +102,7 @@
 	 	pthread_mutex_unlock(rand_lock);
 
 	 	/* Use this test to see if we hit inside the circle */
-	 	if (sqrt(x*x + y*y) <= 1) {
+	 	if (x*x + y*y <= 1) {
 
 			isHit = 1; 		
 	 	} else {
@@ -166,6 +165,7 @@
  		printf("Too few arguments!\n");
  		exit(-1);
  	}
+ 	
 
  	/* Scan in the correct information
  		argv[1]: Number of threads to use
@@ -176,7 +176,14 @@
  	/* Make sure we have one or more threads */
  	if (numThreads < 1) {
 
- 		printf("Not a valid number of threads (must have 1 or more)");
+ 		printf("Not a valid number of threads (must have 1 or more)\n");
+ 		exit (-1);
+ 	}
+
+ 	/* Make sure we have a minimum number of iterations relative to the thresold */
+ 	if (numIterations < _THRESHOLD) {
+
+ 		printf("not a valid number of iterations (need more to run)\n");
  		exit (-1);
  	}
 
@@ -239,6 +246,12 @@
  			fprintf (stderr, "Error joining simulation thread %d\n", i);
  			exit (-1);
  		}
+ 	}
+
+ 	if (pthread_join (*printer_thread, NULL)) {
+
+ 		fprintf(stderr, "Error joining the printer thread \n");
+ 		exit (-1);
  	}
 
  	exit(0);
