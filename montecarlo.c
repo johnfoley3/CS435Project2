@@ -128,6 +128,8 @@
 	 	/* Are we there yet? */
 	 	if(throws == numIterations) {
 
+			ok_to_print = 1;
+	 		pthread_cond_broadcast(can_print);
 	 		done = 1;
 	 	}
 
